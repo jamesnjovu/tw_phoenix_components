@@ -56,8 +56,8 @@ defmodule Mix.Tasks.TwPhoenixUi.Install do
     context_app = Mix.Phoenix.context_app()
     file = "lib/#{context_app}_web.ex"
     out("""
-    #{file}
-    #{File.read!(file)}
+    ==> #{file}
+    ==> #{File.read!(file)}
     """)
   end
 
