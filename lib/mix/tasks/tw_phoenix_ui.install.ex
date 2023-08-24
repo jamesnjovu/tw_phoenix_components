@@ -26,33 +26,32 @@ defmodule Mix.Tasks.TwPhoenixUi.Install do
       out("==> File #{file} doesn't require modifications")
     else
       {_, 0} = System.cmd("npm", ~w(install -D alpinejs), cd: "assets")
-      IO.puts("==> Added alpinejs NPM dev package")
+      out("==> Added alpinejs NPM dev package")
     end
 
     if File.exists?(file) and File.read!(file) =~ "alpinejs/collapse" do
       out("==> File #{file} doesn't require modifications")
     else
       {_, 0} = System.cmd("npm", ~w(install -D @alpinejs/collapse), cd: "assets")
-      IO.puts("==> Added alpinejs/collapse NPM dev package")
+      out("==> Added alpinejs/collapse NPM dev package")
     end
 
     if File.exists?(file) and File.read!(file) =~ "alpinejs/focus" do
       out("==> File #{file} doesn't require modifications")
     else
       {_, 0} = System.cmd("npm", ~w(install -D @alpinejs/focus), cd: "assets")
-      IO.puts("==> Added alpinejs/focus NPM dev package")
+      out("==> Added alpinejs/focus NPM dev package")
     end
 
-    # npm install -D @tailwindcss/typography
     if File.exists?(file) and File.read!(file) =~ "tailwindcss/typography" do
       out("==> File #{file} doesn't require modifications")
     else
       {_, 0} = System.cmd("npm", ~w(install -D @tailwindcss/typography), cd: "assets")
-      IO.puts("==> Added tailwindcss/typography NPM dev package")
+      out("==> Added tailwindcss/typography NPM dev package")
     end
   end
 
-  def modify_app_web_cfg() do
+  defp modify_app_web_cfg() do
     context_app = Mix.Phoenix.context_app()
     index = "lib/#{context_app}_web.ex"
 
@@ -148,5 +147,5 @@ defmodule Mix.Tasks.TwPhoenixUi.Install do
     """
   end
 
-  defp out(str), do: System.get_env("DEBUG", "0") |> String.to_integer() > 0 && IO.puts(str)
+  defp out(str), do: IO.puts(str)
 end
