@@ -15,7 +15,7 @@ defmodule Mix.Tasks.TwPhoenixUi.Install do
   def run(_args) do
     modify_npm_cfg()
     modify_app_web_cfg()
-    check_alpinejs()
+    install_alpinejs()
     :ok
   end
 
@@ -59,16 +59,14 @@ defmodule Mix.Tasks.TwPhoenixUi.Install do
       case File.exists?(index) do
         true ->
           File.read!(index) =~ ~r/import.+alpinejs/
-          out("==> Found")
+
         false ->
           false
-          out("==> Not Found")
       end
 
     if found do
       f = File.read!(index)
 
-      out("==> Running")
       str =
         case Regex.run(~r/\n\s*defp\s+html_helpers\s+do\s+quote\s+do/, f, return: :index) do
           [{n, m}] ->
@@ -87,63 +85,93 @@ defmodule Mix.Tasks.TwPhoenixUi.Install do
 
       if f != str do
         File.write!(index, str)
-        IO.puts("==> File #{index} modified")
+        out("==> File #{index} modified")
       else
         out("==> File #{index} doesn't require modifications")
       end
     end
   end
 
-  defp check_alpinejs() do
-    found =
-      case Path.wildcard("lib/**/root.html.heex") do
-        [root_html] -> File.read!(root_html) =~ ~r/<[^s]*script.+alpinejs/
-        [] -> false
+  defp install_alpinejs() do
+    index = "assets/js/app.js"
+    f = File.read!(index)
+
+    str =
+      case Regex.run(~r/\n\s*import\s+\w+\s+from\s+"[^"]+"/, f, return: :index) do
+        [{n, m}] ->
+          {s1, s2} = String.split_at(f, n + m)
+          str = if f =~ "import Alpine", do: "", else: "import Alpine from \"alpinejs\"\n"
+
+          str =
+            if str =~ "import collapse from '@alpinejs/collapse'",
+              do: "",
+              else: str <> "import collapse from \"@alpinejs/collapse\"\n"
+
+          str =
+            if str =~ "import focus from '@alpinejs/focus'",
+              do: "",
+              else: str <> "import collapse from \"@alpinejs/focus\"\n"
+
+          s1 <> "\n  #{str} \n" <> s2
+
+        _ ->
+          f
       end
 
-    file = "assets/js/app.js"
+    str =
+      case Regex.run(
+             ~r/\n\s*document\.querySelector\("meta\[name='csrf-token'\]"\)\.getAttribute\("content"\)/,
+             str,
+             return: :index
+           ) do
+        [{n, m}] ->
+          {s1, s2} = String.split_at(str, n + m)
+          str1 = if str =~ "Alpine.plugin(collapse)", do: "", else: "Alpine.plugin(collapse)\n"
+          str1 = if str1 =~ "Alpine.plugin(focus)", do: "", else: str1 <> "Alpine.plugin(focus)\n"
+          str1 = if str1 =~ "window.Alpine", do: "", else: str1 <> "window.Alpine = Alpine\n"
+          str1 = if str1 =~ "Alpine.start()", do: "", else: str1 <> "Alpine.start()\n"
+          strw = s1 <> "\n  #{str1} \n" <> s2
 
-    found =
-      found ||
-        case File.exists?(file) do
-          true ->
-            File.read!(file) =~ ~r/import.+alpinejs/
+          out("""
+          ===> assets/js/app.js
+          //Change FROM
+          let liveSocket = new LiveSocket("/live", Socket, {
+              params: {_csrf_token: csrfToken}
+          })
+          // Change TO
+          let liveSocket = new LiveSocket("/live", Socket, {
+              params: {_csrf_token: csrfToken},
+              dom: {
+                  onBeforeElUpdated(from, to) {
+                      if (from._x_dataStack) {
+                          window.Alpine.clone(from, to);
+                      }
+                  }
+              }
+          })
+          """)
 
-          false ->
-            false
-        end
+        _ ->
+          str
+      end
 
-    out("""
-    ==> /assets/js/app.js
-
-    ==> requires that AlpineJS is available.
-    ==>
-    ==> However AlpineJS configuration is missing! You either need to include:
-    ==>
-    ==>   <script src="//unpkg.com/alpinejs" defer></script>
-    ==>
-    ==> in the root.html.heex template, or add this to the assets/js/app.js:
-    ==>
-    ==>   import Alpine from "alpinejs";
-    ==>   import collapse from '@alpinejs/collapse'
-    ==>   import focus from '@alpinejs/focus'
-    ==>
-    ==>   Alpine.plugin(collapse)
-    ==>   Alpine.plugin(focus)
-    ==>   window.Alpine = Alpine
-    ==>   Alpine.start()
-    """)
+    if f != str do
+      File.write!(index, str)
+      out("==> File #{index} modified")
+    else
+      out("==> File #{index} doesn't require modifications")
+    end
   end
 
   defp app_web_context() do
     """
-    alias TwPhoenixUi.{
-      Card,
-      Model,
-      Option,
-      Table,
-      TopNav
-    }
+        alias TwPhoenixUi.{
+          Card,
+          Model,
+          Option,
+          Table,
+          TopNav
+        }
     """
   end
 
