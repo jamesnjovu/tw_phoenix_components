@@ -22,7 +22,7 @@ defmodule TwPhoenixUi.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:phoenix_live_view, "~> 0.18.2"},
+      {:phoenix_live_view, "~> 0.19.0"},
       {:gettext, "~> 0.20"},
       {:scrivener_ecto, "~> 2.7.0"},
       {:ex_doc, "~> 0.23", only: :dev, runtime: false},
