@@ -72,17 +72,17 @@ defmodule Mix.Tasks.TwPhoenixUi.Install do
       str =
         case Regex.run(~r/\n\s*defp\s+html_helpers\s+do\s+quote\s+do/, f, return: :index) do
           [{n, m}] ->
-            {s1, s2} = String.split_at(str, n + m)
+            {s1, s2} = String.split_at(f, n + m)
 
             if s2 =~ app_web_context() do
-              str
+              f
             else
               s2 = String.trim_leading(s2, "\n")
               s1 <> "\n  #{app_web_context()} \n" <> s2
             end
 
           _ ->
-            str <> "\nexport default {\n  #{app_web_context()}\n"
+            f <> "\defp html_helpers do\nquote do\n  #{app_web_context()}\nend\nend"
         end
 
       if f != str do
