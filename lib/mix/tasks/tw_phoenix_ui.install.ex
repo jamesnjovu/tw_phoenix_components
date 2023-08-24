@@ -14,8 +14,9 @@ defmodule Mix.Tasks.TwPhoenixUi.Install do
 
   @impl true
   def run(_args) do
-    # modify_npm_cfg()
+    modify_npm_cfg()
     modify_app_web_cfg()
+    check_alpinejs()
     :ok
   end
 
@@ -54,11 +55,43 @@ defmodule Mix.Tasks.TwPhoenixUi.Install do
 
   def modify_app_web_cfg() do
     context_app = Mix.Phoenix.context_app()
-    file = "lib/#{context_app}_web.ex"
-    out("""
-    ==> #{file}
-    ==> #{File.read!(file)}
-    """)
+    index = "lib/#{context_app}_web.ex"
+
+    found =
+      File.exists?(index) do
+        true ->
+          File.read!(index) =~ ~r/import.+alpinejs/
+
+        false ->
+          false
+      end
+
+    if found do
+      f = File.read!(file)
+
+      str =
+        case Regex.run(~r/\n\s*defp\s+html_helpers\s+do\s+quote\s+do/, f, return: :index) do
+          [{n, m}] ->
+            {s1, s2} = String.split_at(str, n + m)
+
+            if s2 =~ app_web_context() do
+              str
+            else
+              s2 = String.trim_leading(s2, "\n")
+              s1 <> "\n  #{app_web_context()} \n" <> s2
+            end
+
+          _ ->
+            str <> "\nexport default {\n  #{app_web_context()}\n"
+        end
+
+      if f != str do
+        File.write!(index, str)
+        IO.puts("==> File #{index} modified")
+      else
+        out("==> File #{index} doesn't require modifications")
+      end
+    end
   end
 
   defp check_alpinejs() do
@@ -113,5 +146,6 @@ defmodule Mix.Tasks.TwPhoenixUi.Install do
     }
     """
   end
+
   defp out(str), do: System.get_env("DEBUG", "0") |> String.to_integer() > 0 && IO.puts(str)
 end
