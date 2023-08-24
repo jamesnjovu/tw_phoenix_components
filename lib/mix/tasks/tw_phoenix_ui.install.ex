@@ -67,7 +67,7 @@ defmodule Mix.Tasks.TwPhoenixUi.Install do
       end
 
     if found do
-      f = File.read!(file)
+      f = File.read!(index)
 
       str =
         case Regex.run(~r/\n\s*defp\s+html_helpers\s+do\s+quote\s+do/, f, return: :index) do
