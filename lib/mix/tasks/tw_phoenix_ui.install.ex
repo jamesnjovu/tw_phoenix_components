@@ -10,7 +10,6 @@ defmodule Mix.Tasks.TwPhoenixUi.Install do
   @shortdoc "Installs tw_phoenix_ui component"
 
   use Mix.Task
-  alias Mix.Tasks.Phx.Gen
 
   @impl true
   def run(_args) do
@@ -61,14 +60,16 @@ defmodule Mix.Tasks.TwPhoenixUi.Install do
       case File.exists?(index) do
         true ->
           File.read!(index) =~ ~r/import.+alpinejs/
-
+          out("==> Found")
         false ->
           false
+          out("==> Not Found")
       end
 
     if found do
       f = File.read!(index)
 
+      out("==> Running")
       str =
         case Regex.run(~r/\n\s*defp\s+html_helpers\s+do\s+quote\s+do/, f, return: :index) do
           [{n, m}] ->

@@ -1,7 +1,6 @@
 defmodule TwPhoenixUi.PaginationComponent do
   @moduledoc false
   use Phoenix.LiveComponent
-  alias Phoenix.LiveView.JS
   import TwPhoenixUi.Helper.DataTable
 
   @distance 5
