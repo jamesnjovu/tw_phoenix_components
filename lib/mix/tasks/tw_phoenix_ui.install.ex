@@ -58,7 +58,7 @@ defmodule Mix.Tasks.TwPhoenixUi.Install do
     index = "lib/#{context_app}_web.ex"
 
     found =
-      File.exists?(index) do
+      case File.exists?(index) do
         true ->
           File.read!(index) =~ ~r/import.+alpinejs/
 
